@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Pie Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        #chart {
+            width: 600px;
+            height: 400px;
+            margin: auto;
+        }
+        .legend-label {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        .pie-label {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart"></div>
+    <script>
+        // Data
+        const data = [
+            { name: "Amber", value: 140 },
+            { name: "Amy", value: 250 },
+            { name: "Jane", value: 180 },
+            { name: "Kelly", value: 220 }
+        ];
+
+        // Dimensions
+        const width = 600;
+        const height = 400;
+        const margin = 40;
+        const radius = Math.min(width, height) / 2 - margin;
+
+        // Color scale
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.name))
+            .range(d3.schemeCategory10);
+
+        // Create SVG
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width/2 - 50}, ${height/2})`);
+
+        // Pie generator
+        const pie = d3.pie()
+            .value(d => d.value);
+
+        // Arc generator
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        // Create pie chart
+        const paths = svg.selectAll("path")
+            .data(pie(data))
+            .join("path")
+            .attr("d", arc)
+            .attr("fill", d => color(d.data.name))
+            .attr("stroke", "white")
+            .style("stroke-width", "2px");
+
+        // Add labels
+        svg.selectAll("text")
+            .data(pie(data))
+            .join("text")
+            .attr("transform", d => `translate(${arc.centroid(d)})`)
+            .attr("dy", "0.35em")
+            .attr("text-anchor", "middle")
+            .attr("class", "pie-label")
+            .text(d => d.data.name);
+
+        // Add legend
+        const legend = svg.selectAll(".legend")
+            .data(data)
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr("transform", (d, i) => `translate(200, ${i * 20 - 80})`);
+
+        legend.append("rect")
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", d => color(d.name));
+
+        legend.append("text")
+            .attr("x", 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .attr("class", "legend-label")
+            .text(d => `${d.name} (${d.value})`);
+
+        // Add percentage labels
+        svg.selectAll(".percentage")
+            .data(pie(data))
+            .join("text")
+            .attr("transform", d => `translate(${arc.centroid(d)})`)
+            .attr("dy", "1.5em")
+            .attr("text-anchor", "middle")
+            .attr("class", "pie-label")
+            .text(d => `${Math.round((d.data.value/d3.sum(data, d => d.value))*100)}%`);
+    </script>
+</body>
+</html>
